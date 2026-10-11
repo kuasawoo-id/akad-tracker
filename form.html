@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover">
+  <title>Form Jadwal Akad</title>
+  <meta name="theme-color" content="#FFFFFF">
+  <link rel="icon" type="image/png" href="icons/favicon-48.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/form.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-landmark" viewBox="0 0 24 24"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2 20 7H4z"/></symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-chev-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+    <symbol id="i-chev-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  </defs>
+</svg>
+
+<header class="f-top">
+  <div class="brand-logo" id="fLogo"><svg class="icon icon-lg"><use href="#i-landmark"/></svg></div>
+  <div><div class="t1">AKAD TRACKER</div><div class="t2" id="fKua">KUA Sawoo</div></div>
+  <span class="tag">FORM PUBLIK</span>
+</header>
+
+<main class="f-wrap">
+  <!-- FORM -->
+  <form id="pubForm" novalidate>
+    <div class="f-intro">
+      <div class="ic"><svg class="icon icon-lg"><use href="#i-clipboard"/></svg></div>
+      <div><h1>Form Jadwal Akad <span id="fKua2">— KUA Sawoo</span></h1><p>Isi data jadwal akad. Data langsung masuk ke jadwal KUA.</p></div>
+    </div>
+
+    <div class="callout callout-danger" id="loadErr" hidden></div>
+
+    <div class="field" data-f="catin_pria">
+      <label class="label" for="catin_pria">Nama Catin Pria <span class="req">*</span></label>
+      <input class="input upper" id="catin_pria" name="catin_pria" maxlength="120" autocomplete="off" placeholder="Nama lengkap calon pengantin pria">
+      <div class="err-msg"><svg class="icon icon-sm"><use href="#i-alert"/></svg><span>Wajib diisi</span></div>
+    </div>
+    <div class="field" data-f="catin_wanita">
+      <label class="label" for="catin_wanita">Nama Catin Wanita <span class="req">*</span></label>
+      <input class="input upper" id="catin_wanita" name="catin_wanita" maxlength="120" autocomplete="off" placeholder="Nama lengkap calon pengantin wanita">
+      <div class="err-msg"><svg class="icon icon-sm"><use href="#i-alert"/></svg><span>Wajib diisi</span></div>
+    </div>
+    <div class="field" data-f="wali">
+      <span class="label" id="lblWali">Wali <span class="req">*</span></span>
+      <div class="seg" role="group" aria-labelledby="lblWali" data-seg="wali">
+        <button type="button" data-v="NASAB" aria-pressed="false">Nasab</button>
+        <button type="button" data-v="HAKIM" aria-pressed="false">Hakim</button>
+      </div>
+      <div class="err-msg"><svg class="icon icon-sm"><use href="#i-alert"/></svg><span>Pilih Nasab atau Hakim</span></div>
+    </div>
+    <div>
+      <div class="field" data-f="tanggal">
+        <label class="label" for="tanggal">Tanggal Akad <span class="req">*</span></label>
+        <input class="input tnum" id="tanggal" name="tanggal" type="date">
+        <div class="hint" id="hariHint">Hari: —</div>
+        <div class="err-msg"><svg class="icon icon-sm"><use href="#i-alert"/></svg><span>Wajib diisi</span></div>
+      </div>
+      <div class="field" data-f="jam">
+        <span class="label" id="lblJam">Jam Akad (WIB) <span class="req">*</span></span>
+        <div class="stepper" role="group" aria-labelledby="lblJam">
+          <button type="button" class="st-btn" data-step="-1" aria-label="30 menit lebih awal"><svg class="icon"><use href="#i-chev-down"/></svg></button>
+          <output class="st-val tnum" id="jamOut" aria-live="polite">--.--</output>
+          <button type="button" class="st-btn" data-step="1" aria-label="30 menit lebih siang"><svg class="icon"><use href="#i-chev-up"/></svg></button>
+          <input type="hidden" id="jam" name="jam">
+        </div>
+        <div class="hint">Tekan panah ▲ / ▼ — setiap tekan bergeser 30 menit.</div>
+        <div class="err-msg"><svg class="icon icon-sm"><use href="#i-alert"/></svg><span>Wajib diisi</span></div>
+      </div>
+    </div>
+    <div class="hint warn" id="pastWarn" hidden style="margin:-8px 0 14px"><b>Perhatian:</b> tanggal ini sudah lewat. Periksa kembali — data tetap boleh dikirim.</div>
+    <div class="field" data-f="tempat">
+      <span class="label" id="lblTempat">Nikah di <span class="req">*</span></span>
+      <div class="seg" role="group" aria-labelledby="lblTempat" data-seg="tempat">
+        <button type="button" data-v="KANTOR" aria-pressed="false">Kantor KUA</button>
+        <button type="button" data-v="LUAR_KANTOR" aria-pressed="false">Luar Kantor</button>
+      </div>
+      <div class="err-msg"><svg class="icon icon-sm"><use href="#i-alert"/></svg><span>Pilih lokasi nikah</span></div>
+    </div>
+    <div class="field" data-f="desa">
+      <label class="label" for="desa">Desa <span class="req">*</span></label>
+      <select class="select" id="desa" name="desa"><option value="">-- Pilih Desa / Kelurahan --</option></select>
+      <div class="err-msg"><svg class="icon icon-sm"><use href="#i-alert"/></svg><span>Wajib diisi</span></div>
+    </div>
+    <div class="field" data-f="modin">
+      <label class="label" for="modin">Modin <span class="opt">(opsional)</span></label>
+      <select class="select" id="modin" name="modin"><option value="">-- Pilih Modin (opsional) --</option></select>
+      <div class="err-msg"><svg class="icon icon-sm"><use href="#i-alert"/></svg><span>Modin tidak valid</span></div>
+    </div>
+    <div class="field" data-f="keterangan">
+      <label class="label" for="keterangan">Keterangan <span class="opt">(opsional)</span></label>
+      <textarea class="textarea" id="keterangan" name="keterangan" maxlength="500" placeholder="Alamat detail rumah mempelai wanita, patokan, dll."></textarea>
+    </div>
+    <!-- Honeypot anti-spam: tidak terlihat manusia -->
+    <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+
+    <div class="f-note"><svg class="icon"><use href="#i-info"/></svg><span>Bila ada data yang perlu diperbaiki, petugas KUA akan menghubungi.</span></div>
+    <div class="f-foot" id="fFoot">KUA Sawoo • Administrasi Pernikahan</div>
+
+    <div class="f-submit"><button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn">Kirim Jadwal <svg class="icon"><use href="#i-send"/></svg></button></div>
+  </form>
+
+  <!-- SUKSES -->
+  <section id="okView" hidden>
+    <div class="ok-wrap">
+      <div class="ok-ic"><svg class="icon"><use href="#i-check"/></svg></div>
+      <h2>Jadwal tercatat</h2>
+      <p class="muted">Jadwal sudah tercatat di KUA.</p>
+      <div class="callout callout-warn" id="okDup" hidden>Data serupa sudah pernah tercatat. Petugas KUA akan memeriksa kemungkinan duplikat.</div>
+      <dl class="dl ok-sum" id="okSum"></dl>
+      <button class="btn btn-primary btn-lg btn-block" id="againBtn"><svg class="icon"><use href="#i-plus"/></svg>Isi Lagi</button>
+    </div>
+  </section>
+</main>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>AkdApi.boot('form');</script>
+</body>
+</html>

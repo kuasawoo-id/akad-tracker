@@ -1,0 +1,24 @@
+/* AKAD TRACKER — gaya khusus form publik (dari Form.html v1.10) */
+/* Form publik: ringan, satu kolom, tanpa navigasi (PRD 7.5) */
+body { background: var(--surface); }
+.f-top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.f-top .brand-logo { background: var(--primary); color: #fff; width: 40px; height: 40px; border-radius: 10px; }
+.f-top .t1 { font-size: 18px; font-weight: 800; color: var(--primary-deep); line-height: 1.1; }
+.f-top .t2 { font-size: 11.5px; font-weight: 600; letter-spacing: .08em; color: var(--text-muted); text-transform: uppercase; }
+.f-top .tag { margin-left: auto; font-size: 11px; letter-spacing: .04em; }
+.f-wrap { max-width: 520px; margin: 0 auto; padding: 20px 16px 120px; }
+.f-intro { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 20px; }
+.f-intro .ic { width: 44px; height: 44px; border-radius: 12px; background: var(--surface-2); display: grid; place-items: center; flex: none; color: var(--primary); }
+.f-intro h1 { margin: 0; font-size: 21px; font-weight: 700; color: var(--primary-deep); }
+.f-intro h1 span { white-space: nowrap; font-weight: 400; font-size: 16px; color: var(--text-muted); }
+.f-intro p { margin: 4px 0 0; color: var(--text-muted); font-size: 13.5px; }
+.f-note { display: flex; gap: 10px; align-items: flex-start; padding: 14px; border-radius: var(--r-lg); background: var(--info-bg); border: 1px solid #C9D6E8; color: var(--primary); font-size: 13.5px; margin: 8px 0 16px; }
+.f-foot { text-align: center; font-size: 11.5px; letter-spacing: .08em; color: var(--text-muted); text-transform: uppercase; margin-top: 24px; }
+.f-submit { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + var(--safe-b)); background: var(--surface); border-top: 1px solid var(--border); z-index: 10; }
+.f-submit .btn { max-width: 520px; margin: 0 auto; display: flex; }
+.hp { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; overflow: hidden; }
+.ok-wrap { text-align: center; padding: 40px 8px; }
+.ok-ic { width: 72px; height: 72px; border-radius: 50%; background: var(--success-bg); color: var(--success-fg); display: grid; place-items: center; margin: 0 auto 16px; }
+.ok-ic .icon { width: 36px; height: 36px; stroke-width: 2.5; }
+.ok-wrap h2 { margin: 0 0 6px; font-size: 20px; }
+.ok-sum { text-align: left; margin: 20px 0; }
