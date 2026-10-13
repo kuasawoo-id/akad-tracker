@@ -1431,7 +1431,11 @@ function bwCatinList(all) {
   const q = norm(f.q);
   return all.filter((j) => (f.st === 'SEMUA' || (bwSt(j) || 'BELUM') === f.st) &&
     (!q || norm(j.catin_pria + ' ' + j.catin_wanita + ' ' + j.desa).indexOf(q) >= 0))
-    .sort((a, b) => b.tanggal.localeCompare(a.tanggal) || String(a.jam).localeCompare(String(b.jam)));
+    .sort((a, b) => bwUrut(a.desa, a.tanggal, a.jam, b.desa, b.tanggal, b.jam));
+}
+/** v2.1: urutan Bimwin — desa A–Z, lalu tanggal akad terdekat, lalu jam. */
+function bwUrut(d1, t1, j1, d2, t2, j2) {
+  return String(d1 || '').toLowerCase().localeCompare(String(d2 || '').toLowerCase()) || String(t1 || '').localeCompare(String(t2 || '')) || String(j1 || '').localeCompare(String(j2 || ''));
 }
 
 function bwCatinHtml(all, cnt) {
@@ -1464,7 +1468,7 @@ function bwCatinHtml(all, cnt) {
 /** Peserta terkini: nama/desa/tanggal dari Jadwal (bila diedit), selain itu salinan di sesi. Urut tanggal + jam akad. */
 function bwPeserta(x) {
   return x.peserta.map((p) => { const j = byId(p.id); return Object.assign({}, p, j ? { p: j.catin_pria, w: j.catin_wanita, d: j.desa, t: j.tanggal, j: j.jam } : {}); })
-    .sort((a, b) => (a.t + a.j).localeCompare(b.t + b.j));
+    .sort((a, b) => bwUrut(a.d, a.t, a.j, b.d, b.t, b.j));
 }
 
 function bwSesiHtml() {
@@ -1510,7 +1514,9 @@ function bwSesiCard(x) {
 function sesiForm(id, selIds) {
   const x = id ? sesiById(id) : null;
   const st = settings();
-  const v = x ? clone(x) : { tanggal: '', jam: st.bimwin_jam || '08:00', tempat: st.bimwin_tempat || '', keterangan: '', nomor_surat: st.bimwin_nomor_terakhir || '' };
+  // v2.1: sesi baru → jam, tempat, keterangan otomatis dari sesi terakhir (bawaan Pengaturan bila belum ada sesi)
+  const last = S.bimwin.slice().sort((a, b) => String(b.tanggal || '').localeCompare(String(a.tanggal || '')) || String(b.id || '').localeCompare(String(a.id || '')))[0];
+  const v = x ? clone(x) : { tanggal: '', jam: (last && last.jam) || st.bimwin_jam || '08:00', tempat: (last && last.tempat) || st.bimwin_tempat || '', keterangan: (last && last.keterangan) || '', nomor_surat: st.bimwin_nomor_terakhir || '' };
   const sel = (selIds || []).map(byId).filter((j) => j && !bwSt(j));
   const fld = (name, label, inner, req, hint) => `<div class="field" data-f="${name}"><label class="label" for="sf_${name}">${label} ${req ? '<span class="req">*</span>' : '<span class="opt">(opsional)</span>'}</label>${inner}${hint || ''}<div class="err-msg">${icon('alert', 'icon-sm')}<span>Wajib diisi</span></div></div>`;
   openModal({
@@ -1677,16 +1683,14 @@ function bwExcel(id) {
   const s = settings();
   const rows = [];
   let n = 0;
-  bwPeserta(x).forEach((p) => {
-    n++; rows.push([n, p.p, 'L', p.d, tglOf(p.t), '', n + '.']);
-    n++; rows.push([n, p.w, 'P', p.d, tglOf(p.t), '', n + '.']);
-  });
+  // v2.1: catin pria & wanita dalam satu baris (sama dengan PDF daftar hadir)
+  bwPeserta(x).forEach((p) => { n++; rows.push([n, p.p, p.w, p.d, tglOf(p.t), '', '', '']); });
   const k = Math.max(0, Math.min(40, Number(s.bimwin_baris_kosong) || 0));
-  for (let i = 0; i < k; i++) { n++; rows.push([n, '', '', '', '', '', n + '.']); }
+  for (let i = 0; i < k; i++) { n++; rows.push([n, '', '', '', '', '', '', '']); }
   const aoa = [['DAFTAR HADIR BIMBINGAN PERKAWINAN'], [kuaName() + (s.wilayah ? ' · ' + s.wilayah : '')], ['Hari/Tanggal', fmtLong(x.tanggal)],
-    ['Jam', jamDot(x.jam) + ' WIB'], ['Tempat', x.tempat], [], ['No', 'Nama', 'L/P', 'Desa', 'Tanggal Akad', 'No. HP', 'Tanda Tangan'], ...rows];
+    ['Jam', jamDot(x.jam) + ' WIB'], ['Tempat', x.tempat], [], ['No', 'Nama Catin Pria', 'Nama Catin Wanita', 'Desa', 'Tanggal Akad', 'No. HP', 'TTD Catin Pria', 'TTD Catin Wanita'], ...rows];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [6, 30, 5, 16, 20, 16, 20].map((w) => ({ wch: w }));
+  ws['!cols'] = [5, 28, 28, 16, 20, 16, 18, 18].map((w) => ({ wch: w }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Daftar Hadir');
   XLSX.writeFile(wb, `Daftar Hadir Bimwin ${x.tanggal}.xlsx`);
@@ -1746,7 +1750,7 @@ function renderBimwinSetting() {
       ${tplBox('bimwin_tpl_undangan', 'Undangan', 'UNDANGAN')}${tplBox('bimwin_tpl_hadir', 'Daftar Hadir', 'HADIR')}</div>
     <div class="panel"><h3>Field yang tersedia</h3><p class="small muted mt0">Ketuk untuk menyalin, lalu tempel di Google Docs. Penulisan harus sama persis (huruf kecil, kecuali TABEL).</p>
       <div class="bw-fields">${fields.map((k) => `<button class="bw-field" data-act="copy" data-v="{{${k}}}"><code>{{${k}}}</code><span>${esc(BW_FIELD_DESC[k] || '')}</span></button>`).join('')}</div>
-      <div class="small muted mt8">Tabel otomatis — <b>Undangan</b>: No, Nama Catin Pria, Nama Catin Wanita, Desa, Tanggal Akad. <b>Daftar Hadir</b>: No, Nama, L/P, Desa, Tanggal Akad, No. HP, Tanda Tangan + baris kosong. Tanpa <code>{{TABEL}}</code>, tabel diletakkan di halaman baru di akhir dokumen.</div></div>
+      <div class="small muted mt8">Tabel otomatis — <b>Undangan</b>: No, Nama Catin Pria, Nama Catin Wanita, Desa, Tanggal Akad. <b>Daftar Hadir</b>: No, Nama Catin Pria, Nama Catin Wanita, Desa, Tanggal Akad, No. HP, TTD Catin Pria, TTD Catin Wanita + baris kosong (template landscape disarankan). Urut desa A–Z, lalu tanggal akad. Lebar tabel otomatis selebar halaman. Boleh lebih dari satu <code>{{TABEL}}</code> (tabel yang sama diulang). Tanpa <code>{{TABEL}}</code>, tabel diletakkan di halaman baru di akhir dokumen.</div></div>
     <div class="panel"><h3>Bawaan sesi</h3>
       <div class="row-dt"><div class="field"><label class="label" for="bwJam">Jam bawaan</label><select class="select" id="bwJam">${jamOptHtml(s.bimwin_jam || '08:00')}</select></div>
       <div class="field"><label class="label" for="bwKosong">Baris kosong daftar hadir</label><input class="input tnum" id="bwKosong" type="number" min="0" max="40" value="${esc(s.bimwin_baris_kosong || '6')}"><div class="hint">Untuk peserta susulan yang ditulis tangan.</div></div></div>
