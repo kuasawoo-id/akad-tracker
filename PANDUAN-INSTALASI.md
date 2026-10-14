@@ -1,4 +1,4 @@
-# AKAD TRACKER v2.0 — Panduan Migrasi ke GitHub Pages
+# AKAD TRACKER v2.2 — Panduan Migrasi ke GitHub Pages
 
 KUA Kecamatan Sawoo · Ahzani Labs · Frontend GitHub Pages + Google Apps Script (REST API) + Google Sheets
 
@@ -18,7 +18,7 @@ Yang terasa berbeda bagi pengguna:
 
 - **Alamat baru:** `https://USERNAME.github.io/akad-tracker/`. Setiap HP/laptop perlu **masuk sekali lagi** dengan password yang sama, karena salinan login tersimpan per alamat.
 - **Link dan QR lama tetap jalan.** Begitu tim membuka alamat baru dan masuk satu kali, link `/exec` lama (termasuk QR form yang sudah dicetak) otomatis meneruskan ke alamat baru.
-- Aplikasi bisa **dipasang langsung** dari Chrome (menu ⋮ → Instal aplikasi), tanpa folder `akad-tracker-pwa` terpisah.
+- **v2.2:** AKAD TRACKER **tidak lagi berupa PWA** (tidak bisa dipasang sebagai aplikasi). Aplikasi dibuka sebagai halaman web biasa di browser atau dari katalog LABUKU EVO.
 - Celah putih dan tampilan "ter-zoom" di HP berasal dari bingkai halaman Google, dan bingkai itu sudah tidak dipakai.
 
 ---
@@ -41,8 +41,7 @@ Isi paket `akad-tracker.zip`:
 akad-tracker\              ← folder hasil ekstrak = folder yang di-git init
 ├── index.html             ← harus terlihat langsung di sini
 ├── form.html
-├── manifest.webmanifest
-├── sw.js
+├── sw.js              (pemutus PWA lama, jangan dihapus)
 ├── README.md
 ├── PANDUAN-INSTALASI.md
 ├── css\   style.css, form.css
@@ -168,12 +167,7 @@ Tidak perlu menjalankan `setup` lagi. Izin Drive/Dokumen/Sheets sama seperti v1.
 3. **Pengaturan → Umum**: link form dan QR sekarang memakai alamat GitHub. QR lama yang sudah dicetak **tetap bisa dipakai**, jadi tidak wajib cetak ulang.
 4. Buka link `/exec` lama. Halaman "AKAD TRACKER sudah pindah alamat" harus muncul dan langsung meneruskan ke alamat baru. Ini baru aktif setelah langkah 1 (server mencatat alamat baru saat tim pertama kali masuk).
 5. Uji form modin: buka `…/akad-tracker/form.html` di HP → kirim satu jadwal uji → cek di dashboard → hapus.
-6. Pasang sebagai aplikasi:
-   - Android (Chrome): menu ⋮ → **Instal aplikasi**;
-   - iPhone (Safari): Bagikan → **Tambahkan ke Layar Utama**;
-   - laptop (Chrome/Edge): ikon **Instal** di ujung kanan kolom alamat.
-
-   Ikon aplikasi lama (dari folder `akad-tracker-pwa` atau pintasan `/exec`) sebaiknya dihapus agar tidak membingungkan.
+6. Hapus ikon aplikasi AKAD TRACKER yang pernah dipasang di HP/laptop (PWA lama, folder `akad-tracker-pwa`, atau pintasan `/exec`). Sejak v2.2 aplikasi tidak lagi dipasang; buka lewat browser atau katalog LABUKU EVO.
 7. Umumkan alamat baru ke tim. Setiap perangkat cukup masuk sekali.
 
 ---
@@ -246,7 +240,7 @@ GitHub Pages memperbarui situs dalam 1–2 menit. Di HP, tutup lalu buka ulang a
 - **Buka lebih cepat.**
   - Data layar masuk dan daftar desa/modin di form disimpan di perangkat, jadi halaman langsung tampil lalu diperbarui di latar belakang.
   - Data jadwal memakai salinan terakhir seperti v1.10. Tombol **Keluar** menghapus salinan jadwal.
-- **PWA.** `sw.js` hanya menyimpan berkas tampilan dan selalu mengambil versi terbaru dari jaringan lebih dulu. Data jadwal tidak pernah disimpan oleh service worker.
+- **PWA dihapus (v2.2).** `manifest.webmanifest` dihapus, dan panel "Pasang sebagai aplikasi" di Pengaturan ditiadakan. `sw.js` kini hanya pemutus: perangkat yang dulu memasang service worker akan menghapus cache lamanya dan mencabut service worker itu sendiri. Hal yang sama juga dilakukan `js/api.js` setiap kali aplikasi dibuka.
 - **Bug "Maaf, saat ini tidak dapat membuka file"** di HP yang login dengan akun pemilik script tidak lagi berlaku untuk dashboard. Aplikasi tidak dibuka lewat halaman Google lagi, dan permintaan data dikirim tanpa akun Google.
 - **Lupa password:** di editor, jalankan **`resetPassword`**. Semua perangkat keluar dan kode aktivasi baru muncul di Log eksekusi serta sheet MULAI_DI_SINI. Buka dashboard, lalu aktivasi ulang.
 - **Uji coba:** jalankan **`isiDataContoh`** di editor untuk menambah 4 akad contoh hari ini. Hapus setelah selesai.
@@ -273,7 +267,7 @@ GitHub Pages memperbarui situs dalam 1–2 menit. Di HP, tutup lalu buka ulang a
 
 1. Buat dokumen di **Google Docs** dengan akun pemilik aplikasi: kop, isi surat, tanda tangan.
 2. Tulis field di tempat yang diinginkan. Field ini bisa disalin dari **Pengaturan → Bimwin**: `{{nomor_surat}}`, `{{tanggal_surat}}`, `{{hari}}`, `{{tanggal}}`, `{{hari_tanggal}}`, `{{jam}}`, `{{tempat}}`, `{{keterangan}}`, `{{jumlah_pasangan}}`, `{{nama_kua}}`, `{{kabupaten}}`. Penulisan harus sama persis, huruf kecil.
-3. Tulis `{{TABEL}}` di baris tersendiri, di tempat tabel nama / daftar hadir akan diletakkan. Tanpa penanda ini, tabel ditaruh di halaman baru di akhir dokumen.
+3. Tulis `{{TABEL}}` di baris tersendiri, di tempat tabel nama / daftar hadir akan diletakkan. Tanpa penanda ini, tabel ditaruh di halaman baru di akhir dokumen. **(v2.1)** `{{TABEL}}` boleh ditulis lebih dari sekali: setiap penanda diisi tabel peserta yang sama. Lebar tabel otomatis selebar area tulis halaman (rata kiri-kanan), mengikuti ukuran kertas dan margin template. Daftar Hadir punya 8 kolom, jadi atur template-nya **landscape** (File → Penyiapan halaman → Lanskap).
 4. Salin link dokumen → **Pengaturan → Bimwin** → tempel → **Pasang**. Aplikasi menyimpan salinannya di folder `Template`. Perubahan berikutnya cukup lewat tombol **Buka & edit template**, tanpa perlu dipasang ulang.
    - Punya file Word? Unggah ke Drive → **Buka dengan Google Dokumen** → **File → Simpan sebagai Google Dokumen**, lalu tempel link hasilnya.
    - Field `{{keterangan}}` yang kosong dan berdiri sendiri di satu baris akan dihapus barisnya.
@@ -293,3 +287,32 @@ Aturan:
 - Hanya pasangan berstatus **Belum** yang bisa dimasukkan ke sesi.
 - Menghapus sesi mengembalikan pesertanya yang belum hadir ke **Belum**.
 - Tidak ada peringatan otomatis. Pantau lewat filter **Belum** di modul Bimwin.
+
+---
+
+## Bagian 9 — Perubahan v2.1
+
+- **Sesi login permanen.** Setelah masuk, perangkat tetap masuk sampai pengguna menekan **Keluar**. Sesi juga berakhir bila password diganti (Pengaturan) atau `resetPassword` dijalankan. Ini sengaja dipertahankan: itulah satu-satunya cara mencabut akses HP yang hilang. Token lama (versi dengan batas 30 hari) otomatis dijadikan permanen saat dipakai lagi.
+  - Catatan iPhone: Safari bisa menghapus data situs yang lama tidak dibuka. Bila itu terjadi, cukup masuk sekali lagi.
+- **Urutan Bimwin.** Daftar Catin, peserta di tab Sesi, tabel PDF Undangan, tabel PDF/Excel Daftar Hadir, dan daftar di pesan WA diurutkan menurut desa (A–Z), lalu tanggal akad terdekat, lalu jam.
+- **Daftar Hadir: satu baris per pasangan.** Kolomnya: No · Nama Catin Pria · Nama Catin Wanita · Desa · Tanggal Akad · No. HP · TTD Catin Pria · TTD Catin Wanita, lalu baris kosong.
+- **Tabel PDF selebar halaman** dan **`{{TABEL}}` boleh lebih dari satu** (lihat Bagian 8 langkah 3).
+- **Sesi Bimwin baru** otomatis berisi jam, tempat, dan keterangan dari sesi terakhir. Nomor surat terakhir tetap muncul seperti sebelumnya. Tanggal tetap dikosongkan.
+- **Dibuka dari aplikasi LABUKU EVO (katalog).** Lihat Bagian 10: sejak v2.2 AKAD TRACKER bukan PWA lagi, sehingga terbuka sebagai tab biasa (dengan tombol ✕ untuk kembali ke katalog). Syaratnya, ikon aplikasi AKAD TRACKER lama sudah dihapus dari HP.
+
+---
+
+## Bagian 10 — Perubahan v2.2: PWA AKAD TRACKER dihapus
+
+- AKAD TRACKER **tidak bisa dipasang lagi** sebagai aplikasi.
+  - Berkas `manifest.webmanifest` dihapus.
+  - Meta tag "web app" untuk Android/iPhone dihapus.
+  - Panel **Pasang sebagai aplikasi** di Pengaturan → Umum ditiadakan.
+- **Pembersihan otomatis.** Saat AKAD TRACKER dibuka, service worker dan cache PWA lama di perangkat itu otomatis dihapus.
+- **Ikon yang sudah terpasang di HP/laptop tidak bisa dihapus dari kode.** Hapus manual sekali per perangkat:
+  - Android: tekan lama ikon AKAD TRACKER → **Copot pemasangan / Hapus**.
+  - iPhone: tekan lama ikon → **Hapus Bookmark**.
+  - Laptop Chrome/Edge: buka `chrome://apps` (atau `edge://apps`) → klik kanan AKAD TRACKER → **Hapus**.
+- **Sesudah ikon dihapus,** kartu AKAD TRACKER di katalog LABUKU EVO membuka AKAD TRACKER sebagai tab di atas katalog. Tombol ✕ / kembali mengembalikan ke katalog, tidak lagi "diambil alih".
+- **Untuk tim yang tidak memakai katalog,** simpan alamat `https://USERNAME.github.io/akad-tracker/` sebagai bookmark browser.
+- **Saat memperbarui repository,** hapus `manifest.webmanifest` dari repository: jalankan `git rm manifest.webmanifest`, lalu commit & push. `sw.js` **jangan dihapus**, karena masih dibutuhkan untuk membersihkan perangkat lama.

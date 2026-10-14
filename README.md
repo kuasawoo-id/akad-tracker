@@ -8,8 +8,7 @@ dan diolah oleh Google Apps Script (`Code.gs`) yang di-deploy sebagai Web App (R
 ```
 index.html            dashboard tim KUA (perlu password)
 form.html             form publik untuk modin (tanpa password)
-manifest.webmanifest  supaya bisa dipasang sebagai aplikasi (PWA)
-sw.js                 cangkang PWA (hanya berkas tampilan, bukan data)
+sw.js                 pemutus PWA lama (v2.2: aplikasi tidak lagi bisa dipasang; berkas ini membersihkan perangkat lama)
 css/style.css         gaya aplikasi
 css/form.css          gaya khusus form publik
 js/config.js          ← SATU-SATUNYA yang perlu diisi: GAS_URL (URL /exec Apps Script)

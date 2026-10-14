@@ -1977,12 +1977,6 @@ function renderUmum() {
       <p class="small muted">Bagikan link/QR ini ke modin. Tidak perlu password. QR yang diunduh berisi judul, nama KUA, dan link — siap dicetak lalu ditempel di tempat yang mudah dijangkau.</p></div></div>
       <div class="link-box mt16"><input class="input" readonly value="${esc(S.boot.appUrl)}"><button class="btn" data-act="copy" data-v="${esc(S.boot.appUrl)}">${icon('copy')}Salin link dashboard</button></div>
       <p class="small muted">Link dashboard + password hanya untuk tim KUA (data pribadi catin — UU 27/2022 PDP).</p>` : '<p class="small muted">URL Web App belum tersedia (aplikasi belum di-deploy).</p>'}</div>
-    <div class="panel"><h3>Pasang sebagai aplikasi (HP &amp; laptop)</h3>
-      <p class="small mt0">Aplikasi ini bisa dipasang seperti aplikasi biasa: ikon di layar utama, terbuka layar penuh tanpa bilah alamat. Buka link dashboard di atas, lalu:</p>
-      <ul class="small bw-howto"><li><b>Android (Chrome)</b>: menu ⋮ → <i>Instal aplikasi</i> (atau <i>Tambahkan ke layar utama</i>).</li>
-        <li><b>iPhone (Safari)</b>: tombol Bagikan → <i>Tambahkan ke Layar Utama</i>.</li>
-        <li><b>Laptop (Chrome / Edge)</b>: ikon <i>Instal</i> di ujung kanan kolom alamat.</li></ul>
-      <p class="small muted">Modin cukup memakai link/QR form di atas, tidak perlu memasang aplikasi.</p></div>
     <div class="panel mob-only"><h3>Menu bawah (khusus HP ini)</h3>
       <div class="flex"><div class="grow"><b>Beri jarak aman di bawah menu</b><div class="hint mt0">Biarkan <b>mati</b> agar menu menempel ke dasar layar tanpa celah. Nyalakan hanya bila tombol navigasi HP menutupi tulisan menu. Jarak aman yang dilaporkan HP: <b class="tnum">${safeInsetPx()} px</b>.</div></div>
         <label class="switch"><input type="checkbox" id="suNavSafe" ${navSafeOn() ? 'checked' : ''} aria-label="Beri jarak aman di bawah menu"><span></span></label></div></div>`;

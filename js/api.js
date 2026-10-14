@@ -75,9 +75,12 @@
     }
   }
 
-  // Cangkang aplikasi (PWA): bisa dipasang & terbuka cepat. Data tetap selalu dari server.
+  // v2.2: PWA dihapus. Bersihkan service worker & cache cangkang lama yang pernah terpasang di perangkat ini.
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
-    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+    navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }).catch(function () {});
+  }
+  if (window.caches && caches.keys) {
+    caches.keys().then(function (ks) { ks.forEach(function (k) { if (k.indexOf('akad-tracker') === 0) caches.delete(k); }); }).catch(function () {});
   }
 
   window.AkdApi = { call: call, boot: boot, base: BASE, configured: URL_OK };
