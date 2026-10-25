@@ -548,7 +548,7 @@ function cardHtml(j, withActions) {
     <div class="card-top"><div class="jam tnum">${jamDot(j.jam)}<small>WIB</small>${S.pending[j.id] ? '<span class="pend-dot" title="Menyimpan…"></span>' : ''}</div><div class="card-top-r">${hakim}${ph}</div></div>
     <div class="names">${esc(j.catin_pria)} &amp; ${esc(j.catin_wanita)}</div>
     <div class="meta"><div>${lokasi}</div><div>${line2}</div></div>
-    <div class="card-foot"><div class="badges">${bwBadge(j)}${badgesHtml(j, 2)}${note}</div></div>${actions}
+    <div class="card-foot"><div class="badges">${bwBadge(j)}${badgesHtml(j, 2)}${note}${klBadge(j)}</div></div>${actions}
   </article>`;
 }
 
@@ -782,7 +782,8 @@ function detailBodyHtml(j, accOpen) {
     <div class="dl-row"><dt>Penghulu KUA</dt><dd>${phHtml}</dd></div>
     <div class="dl-row"><dt>Bimwin</dt><dd>${bwBadge(j)} <button class="linkbtn" data-act="bw-edit" data-id="${esc(j.id)}">Ubah</button></dd></div>
     ${j.no_pendaftaran ? `<div class="dl-row"><dt>No. Pendaftaran</dt><dd class="tnum">${esc(j.no_pendaftaran)}</dd></div>` : ''}
-    <div class="dl-row"><dt>Sumber</dt><dd>${j.sumber === 'FORM' ? 'Form Publik' : 'Dashboard'}${j.pengisi_form ? '<br><span style="font-weight:500">Pengisi: ' + esc(j.pengisi_form) + '</span>' : ''}</dd></div>
+    <div class="dl-row"><dt>Sumber</dt><dd>${sumberLbl(j)}${j.pengisi_form ? '<br><span style="font-weight:500">Pengisi: ' + esc(j.pengisi_form) + '</span>' : ''}</dd></div>
+    ${/^https:\/\//.test(j.kualink_pdf || '') ? `<div class="dl-row"><dt>Berkas Desa</dt><dd><a class="linkbtn" href="${esc(j.kualink_pdf)}" target="_blank" rel="noopener">Buka PDF paket surat desa</a></dd></div>` : ''}
     <div class="dl-row"><dt>Diperbarui</dt><dd class="small" style="font-weight:500">${esc(stampShort(j.updated_at))} · ${esc(j.updated_by)}</dd></div>
     ${j.keterangan ? `<div class="dl-block"><dt>Alamat / Keterangan</dt><dd>${esc(j.keterangan)}</dd></div>` : ''}
   </dl>`);
@@ -1285,6 +1286,10 @@ function bwLabel(j) {
   if (st === 'TERJADWAL') { const x = sesiById(j.bimwin_sesi_id); return 'Bimwin ' + (x ? fmtDM(x.tanggal) : 'terjadwal'); }
   return 'Belum Bimwin';
 }
+/** v2.3: asal data jadwal — Form Publik (modin), KUA-Link (desa), atau Dashboard. */
+function sumberLbl(j) { return j.sumber === 'FORM' ? 'Form Publik' : j.sumber === 'KUA-LINK' ? 'KUA-Link (desa)' : 'Dashboard'; }
+function klBadge(j) { return j.sumber === 'KUA-LINK' ? '<span class="badge b-info" title="Didaftarkan desa lewat KUA-Link">KUA-Link</span>' : ''; }
+
 function bwBadge(j) {
   const st = bwSt(j);
   const cls = st === 'SUDAH' ? 'b-success' : st === 'TERJADWAL' ? 'b-info' : 'b-danger';
@@ -2242,7 +2247,7 @@ function doExport(inclArsip, btn) {
     const head = ['ID', 'Hari', 'Tanggal', 'Jam', 'Catin Pria', 'Catin Wanita', 'Wali', 'Tempat', 'Desa', 'Modin', 'Penghulu', 'No. Pendaftaran', 'Keterangan', 'Status', 'Verifikasi', 'Status Kirim WA', 'Terakhir Kirim', 'Dikirim Oleh', 'Kemungkinan Duplikat', 'Alasan Batal', 'Dibatalkan Oleh', 'Sumber', 'Pengisi Form', 'Status Bimwin', 'Arsip', 'Dibuat', 'Dibuat Oleh', 'Diubah', 'Diubah Oleh'];
     const body = data.map((r) => [r.id, hariOf(r.tanggal), r.tanggal, jamDot(r.jam), r.catin_pria, r.catin_wanita, waliLbl(r.wali), tempatLbl(r.tempat), r.desa, r.modin, r.penghulu,
       r.no_pendaftaran, r.keterangan, STATUS_LBL[autoStatus(r)], r.verifikasi, r.kirim_status, r.kirim_terakhir_at, r.kirim_terakhir_oleh, r.duplikat_flag ? 'Ya' : '',
-      r.batal_alasan, r.batal_oleh, r.sumber === 'FORM' ? 'Form Publik' : 'Dashboard', r.pengisi_form, bwLabel(r), r.arsip ? 'Ya' : '', r.created_at, r.created_by, r.updated_at, r.updated_by]);
+      r.batal_alasan, r.batal_oleh, sumberLbl(r), r.pengisi_form, bwLabel(r), r.arsip ? 'Ya' : '', r.created_at, r.created_by, r.updated_at, r.updated_by]);
     const cnt = (fn) => data.filter(fn).length;
     const rekap = [['Rekap AKAD TRACKER — ' + kuaName()], ['Periode', periodLabel().replace('_sd_', ' s.d. ')], ['Total jadwal', data.length], [],
       ['Per Penghulu', 'Jumlah'], ...[...new Set(data.map((r) => r.penghulu || '(Belum ada)'))].sort().map((p) => [p, cnt((r) => (r.penghulu || '(Belum ada)') === p)]), [],

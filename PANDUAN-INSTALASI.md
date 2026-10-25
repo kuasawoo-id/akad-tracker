@@ -1,4 +1,4 @@
-# AKAD TRACKER v2.2 — Panduan Migrasi ke GitHub Pages
+# AKAD TRACKER v2.3 — Panduan Migrasi ke GitHub Pages
 
 KUA Kecamatan Sawoo · Ahzani Labs · Frontend GitHub Pages + Google Apps Script (REST API) + Google Sheets
 
@@ -19,6 +19,7 @@ Yang terasa berbeda bagi pengguna:
 - **Alamat baru:** `https://USERNAME.github.io/akad-tracker/`. Setiap HP/laptop perlu **masuk sekali lagi** dengan password yang sama, karena salinan login tersimpan per alamat.
 - **Link dan QR lama tetap jalan.** Begitu tim membuka alamat baru dan masuk satu kali, link `/exec` lama (termasuk QR form yang sudah dicetak) otomatis meneruskan ke alamat baru.
 - **v2.2:** AKAD TRACKER **tidak lagi berupa PWA** (tidak bisa dipasang sebagai aplikasi). Aplikasi dibuka sebagai halaman web biasa di browser atau dari katalog LABUKU EVO.
+- **v2.3:** folder Drive pindah ke **Database by Ahzani Labs / AKAD TRACKER**, dan pendaftaran dari **KUA-Link** otomatis masuk ke jadwal. Lihat **Bagian 11**.
 - Celah putih dan tampilan "ter-zoom" di HP berasal dari bingkai halaman Google, dan bingkai itu sudah tidak dipakai.
 
 ---
@@ -178,7 +179,8 @@ Tidak perlu menjalankan `setup` lagi. Izin Drive/Dokumen/Sheets sama seperti v1.
 2. Ganti isi `Code.gs` dengan `Code.gs` v2.0. Tidak ada file HTML yang perlu dibuat.
 3. **Setelan proyek (ikon roda gigi)** → centang **Tampilkan file manifes "appsscript.json"** → ganti isinya dengan `appsscript.json` dari paket. Simpan.
 4. Pilih fungsi **`setup`** → **▶ Jalankan** → izinkan akses (Tinjau izin → pilih akun → Lanjutan → Buka AKAD TRACKER → Izinkan). Catat **KODE AKTIVASI** di Log eksekusi (juga tertulis di sheet **MULAI_DI_SINI**).
-   - Folder Drive **AKAD TRACKER by Ahzani Labs** (Database, Template, Undangan, Daftar Hadir) dan spreadsheet **AKAD_TRACKER_DB** dibuat otomatis.
+   - Folder Drive **Database by Ahzani Labs / AKAD TRACKER** (Database, Template, Undangan, Daftar Hadir) dan spreadsheet **AKAD_TRACKER_DB** dibuat otomatis. Bila folder **Database by Ahzani Labs** sudah dibuat aplikasi lain (mis. KUA-Link), folder itu yang dipakai.
+   - Tambahkan juga berkas **`KUALink.gs`** (**+ → Skrip** → nama `KUALink`) bila ingin tersambung dengan KUA-Link (Bagian 11).
 5. **Terapkan → Deployment baru → Aplikasi web** → Jalankan sebagai **Saya**, akses **Siapa saja** → **Terapkan** → salin URL `/exec`.
 6. Kerjakan **Bagian 1** (isi `js/config.js` dengan URL itu).
 7. Buka alamat GitHub → layar **Aktivasi Pertama** → masukkan kode aktivasi → buat password tim → **Aktifkan & Masuk**.
@@ -316,3 +318,77 @@ Aturan:
 - **Sesudah ikon dihapus,** kartu AKAD TRACKER di katalog LABUKU EVO membuka AKAD TRACKER sebagai tab di atas katalog. Tombol ✕ / kembali mengembalikan ke katalog, tidak lagi "diambil alih".
 - **Untuk tim yang tidak memakai katalog,** simpan alamat `https://USERNAME.github.io/akad-tracker/` sebagai bookmark browser.
 - **Saat memperbarui repository,** hapus `manifest.webmanifest` dari repository: jalankan `git rm manifest.webmanifest`, lalu commit & push. `sw.js` **jangan dihapus**, karena masih dibutuhkan untuk membersihkan perangkat lama.
+
+---
+
+## Bagian 11 — Perubahan v2.3: folder "Database by Ahzani Labs" & integrasi KUA-Link
+
+### 11.1 Folder Drive
+
+```
+My Drive/
+└── Database by Ahzani Labs/      ← folder utama semua aplikasi Ahzani Labs (dipakai bersama KUA-Link)
+    ├── AKAD TRACKER/             ← dulu "AKAD TRACKER by Ahzani Labs" di My Drive
+    │   ├── Database/  (AKAD_TRACKER_DB)
+    │   ├── Template/  Undangan/  Daftar Hadir/
+    └── KUA-Link/ …
+```
+
+- Tidak ada langkah manual. Pada pemanggilan server pertama setelah `Code.gs` v2.3 ditempel dan di-deploy, folder lama **dipindah utuh** ke dalam **Database by Ahzani Labs** lalu diberi nama **AKAD TRACKER**.
+- Bila **Database by Ahzani Labs** sudah ada (dibuat KUA-Link), folder itu yang dipakai. Bila belum ada, folder itu dibuat.
+- ID folder dan file tidak berubah, jadi link spreadsheet, template, undangan, dan daftar hadir lama tetap bisa dibuka.
+- Pemindahan hanya terjadi sekali (dicatat di Script Properties `APP_DI_INDUK`).
+- Jangan membuat dua folder bernama **Database by Ahzani Labs**. Bila terlanjur ada dua, gabungkan isinya lalu buang yang kosong ke Sampah.
+
+### 11.2 Integrasi KUA-Link → AKAD TRACKER
+
+**Cara kerja:**
+
+- KUA-Link mengirim data saat desa membuat **paket surat (cetak)** untuk pengajuan nikah di wilayah.
+- **Tanpa tombol, tanpa trigger** di AKAD TRACKER.
+- Kirim ulang (cetak ulang) tidak membuat jadwal dobel. Kuncinya adalah **nomor pengajuan KUA-Link**, yang disimpan di kolom **No. Pendaftaran**.
+
+| Kejadian di KUA-Link | Hasil di AKAD TRACKER |
+|---|---|
+| Pengajuan baru dicetak | Jadwal baru, sumber **KUA-Link (desa)**, badge **KUA-Link** di kartu, tautan **Berkas Desa** (PDF) di detail |
+| Data diubah desa lalu dicetak ulang | Hanya field yang **diubah desa** yang ditimpa. Perubahan tim KUA (jam, penghulu, catatan, modin) tetap |
+| Pengajuan dibatalkan | Status **BATAL** dengan tanda "perlu dicek". Data tidak dihapus dan riwayat tetap ada |
+| Pengajuan diaktifkan lagi | Kembali **TERJADWAL** (hanya bila sebelumnya dibatalkan oleh KUA-Link) |
+| Jenis pengajuan berubah menjadi rekomendasi | Diperlakukan sebagai BATAL |
+
+**Pemetaan data:**
+
+| AKAD TRACKER | Diisi dari data KUA-Link |
+|---|---|
+| Catin pria / wanita | Nama suami / istri (otomatis KAPITAL) |
+| Wali | NASAB / HAKIM |
+| Tanggal, Jam | Tanggal dan jam akad |
+| Tempat | KANTOR bila lokasi akad "Kantor…", selain itu LUAR KANTOR |
+| Desa | Nama desa pengaju |
+| Keterangan | Alamat akad · nama wali (hubungan) / alasan wali hakim · syibhul iddah · "Dari KUA-Link · Desa …" |
+| Modin, Penghulu | **Tidak dikirim KUA-Link** — diisi tim KUA |
+
+**Langkah pemasangan (sekali):**
+
+1. Apps Script AKAD TRACKER → `Code.gs` → pilih semua → tempel **`Code.gs` v2.3** → Simpan.
+2. **+ → Skrip** → beri nama `KUALink` → tempel isi **`KUALink.gs`** → Simpan.
+3. Pilih fungsi **`aturKunciKUALink`** → **▶ Jalankan**. Salin kunci **`AKD-…`** dari Log eksekusi.
+   - Kunci hanya tersimpan di Script Properties (`KUALINK_KEY`).
+   - **Jangan** menaruh kunci itu di `js/config.js` atau di GitHub.
+4. **Terapkan → Kelola deployment → pensil → Versi baru → Terapkan.** URL `/exec` tetap sama.
+5. GitHub: timpa **`js/app.js`** dengan versi v2.3 → `git add . && git commit -m "v2.3 KUA-Link" && git push`. **`js/config.js` jangan ditimpa.**
+6. KUA-Link → **Data Master → Integrasi & WhatsApp → Akad Tracker**:
+   - URL: URL `/exec` AKAD TRACKER (sama dengan `GAS_URL` di `js/config.js`);
+   - Kunci: `AKD-…`;
+   - **Simpan → Uji Koneksi** → harus muncul "Kunci cocok".
+7. Uji: buat satu pengajuan uji di KUA-Link → cetak paket → cek jadwal muncul di AKAD TRACKER dengan badge KUA-Link → batalkan di KUA-Link → status jadi BATAL → hapus jadwal uji.
+
+**Bila bermasalah:**
+
+| Gejala | Penyebab & solusi |
+|---|---|
+| Uji Koneksi: "Kunci KUA-Link belum dibuat" | Langkah 3 belum dijalankan, atau deploy (langkah 4) belum dibuat versi baru |
+| "Kunci KUA-Link salah" | Salin ulang kunci tanpa spasi. Mengganti kunci = jalankan `aturKunciKUALink` lagi lalu tempel kunci baru di KUA-Link |
+| "Terlalu banyak percobaan kunci salah" | 5 kali kunci salah → dikunci 5 menit. Tunggu, lalu perbaiki kunci |
+| "Fungsi API tidak dikenal: kualinkMasuk" | `Code.gs` masih versi lama, atau deploy belum versi baru |
+| Kiriman gagal | Tidak menghambat cetak di KUA-Link. KUA-Link mencoba ulang otomatis tiap 30 menit |
