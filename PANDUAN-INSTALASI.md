@@ -1,4 +1,4 @@
-# AKAD TRACKER v2.3 — Panduan Migrasi ke GitHub Pages
+# AKAD TRACKER v2.3.2 — Panduan Migrasi ke GitHub Pages
 
 KUA Kecamatan Sawoo · Ahzani Labs · Frontend GitHub Pages + Google Apps Script (REST API) + Google Sheets
 
@@ -351,7 +351,7 @@ My Drive/
 | Kejadian di KUA-Link | Hasil di AKAD TRACKER |
 |---|---|
 | Pengajuan baru dicetak | Jadwal baru, sumber **KUA-Link (desa)**, badge **KUA-Link** di kartu, tautan **Berkas Desa** (PDF) di detail |
-| Data diubah desa lalu dicetak ulang | Hanya field yang **diubah desa** yang ditimpa. Perubahan tim KUA (jam, penghulu, catatan, modin) tetap |
+| Data diubah desa lalu dicetak ulang | Hanya field yang **diubah desa** yang ditimpa. Perubahan tim KUA (jam, penghulu, catatan, modin) tetap. Modin/nomor WA kosong tidak menghapus isian yang sudah ada |
 | Pengajuan dibatalkan | Status **BATAL** dengan tanda "perlu dicek". Data tidak dihapus dan riwayat tetap ada |
 | Pengajuan diaktifkan lagi | Kembali **TERJADWAL** (hanya bila sebelumnya dibatalkan oleh KUA-Link) |
 | Jenis pengajuan berubah menjadi rekomendasi | Diperlakukan sebagai BATAL |
@@ -366,7 +366,9 @@ My Drive/
 | Tempat | KANTOR bila lokasi akad "Kantor…", selain itu LUAR KANTOR |
 | Desa | Nama desa pengaju |
 | Keterangan | Alamat akad · nama wali (hubungan) / alasan wali hakim · syibhul iddah · "Dari KUA-Link · Desa …" |
-| Modin, Penghulu | **Tidak dikirim KUA-Link** — diisi tim KUA |
+| Modin (v2.3.1) | Dicocokkan ke **Master Modin**: nomor WA dulu, lalu nama tanpa sapaan (Pak/Bapak/Bu). Tidak ditemukan → kolom Modin kosong + catatan "Modin: … — belum ada di Master Modin" di Keterangan |
+| No. WA catin (v2.3.2) | Kolom `no_wa_catin` (format 62…). Tombol **Kirim Jadwal ke Catin** langsung membuka chat nomor itu. Jadwal tanpa nomor tetap membuka WhatsApp untuk memilih kontak |
+| Penghulu | Tidak dikirim KUA-Link — diisi tim KUA |
 
 **Langkah pemasangan (sekali):**
 
@@ -392,3 +394,15 @@ My Drive/
 | "Terlalu banyak percobaan kunci salah" | 5 kali kunci salah → dikunci 5 menit. Tunggu, lalu perbaiki kunci |
 | "Fungsi API tidak dikenal: kualinkMasuk" | `Code.gs` masih versi lama, atau deploy belum versi baru |
 | Kiriman gagal | Tidak menghambat cetak di KUA-Link. KUA-Link mencoba ulang otomatis tiap 30 menit |
+
+### 11.3 Update v2.3.2 (paket KUA-Link V 1.5)
+
+- **Berkas yang diganti:**
+  - `Code.gs`;
+  - `KUALink.gs`;
+  - `js/app.js` (satu baris: tombol Kirim ke Catin memakai nomor WA catin).
+- **Kolom baru:** `no_wa_catin` (SCHEMA 16) ditambahkan otomatis di sheet JADWAL. Data lama tidak berubah.
+- **Kunci & URL:** kunci `AKD-…` dan URL `/exec` **tidak berubah**, jadi tidak perlu menjalankan `aturKunciKUALink` lagi.
+- **Deploy:** tetap wajib **Kelola deployment → Versi baru**.
+- **Pakai `Code.gs` dari paket AKAD TRACKER ini**, bukan `Code.gs` dari paket KUA-Link. `Code.gs` milik KUA-Link belum memuat pemindahan folder **Database by Ahzani Labs** (Bagian 11.1). Bila ditempel, folder induk tidak lagi dipakai untuk instalasi baru.
+- **Agar modin otomatis terisi,** lengkapi **Pengaturan → Modin** (nama dan nomor WA, format apa pun: 08…/62…/+62…).

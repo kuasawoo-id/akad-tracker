@@ -1067,7 +1067,7 @@ function hapusJadwal(id) {
 function actSend(id) {
   const j = byId(id);
   if (!j || !j.penghulu || j.status === 'BATAL') return;
-  openWa('', buildCatinMsg(j));
+  openWa(j.no_wa_catin || '', buildCatinMsg(j));   // v2.3.2: nomor WA catin dari KUA-Link (bila ada)
   optimistic(id, (x) => { x.kirim_status = 'TERKIRIM'; x.kirim_terakhir_at = S.today + ' ' + nowHM() + ':00'; x.kirim_terakhir_oleh = who(); },
     () => api('markSent', S.token, id, who()), { ok: 'WhatsApp dibuka. Status: Terkirim.' });
 }
