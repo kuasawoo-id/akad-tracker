@@ -1,4 +1,4 @@
-# AKAD TRACKER v2.3.2 — Panduan Migrasi ke GitHub Pages
+# AKAD TRACKER v2.4 — Panduan Migrasi ke GitHub Pages
 
 KUA Kecamatan Sawoo · Ahzani Labs · Frontend GitHub Pages + Google Apps Script (REST API) + Google Sheets
 
@@ -406,3 +406,25 @@ My Drive/
 - **Deploy:** tetap wajib **Kelola deployment → Versi baru**.
 - **Pakai `Code.gs` dari paket AKAD TRACKER ini**, bukan `Code.gs` dari paket KUA-Link. `Code.gs` milik KUA-Link belum memuat pemindahan folder **Database by Ahzani Labs** (Bagian 11.1). Bila ditempel, folder induk tidak lagi dipakai untuk instalasi baru.
 - **Agar modin otomatis terisi,** lengkapi **Pengaturan → Modin** (nama dan nomor WA, format apa pun: 08…/62…/+62…).
+
+---
+
+## Bagian 12 — Perubahan v2.4: tampilan Jadwal (hanya frontend)
+
+Server (`Code.gs`, `KUALink.gs`) **tidak berubah**. Yang diganti di GitHub hanya `js/app.js`, `css/style.css`, dan `index.html`. **`js/config.js` jangan diganti.**
+
+1. **Angka ringkasan dipisah Luar Kantor + Kantor.**
+   - Berlaku untuk kartu Bulan Ini, Tahun Ini, tiap penghulu, dan Belum Ada Penghulu. Contoh: `25 + 5` berarti 25 luar kantor dan 5 di kantor.
+   - Di laptop ada keterangan "Luar Kantor + Kantor = 30" di bawah angka. Di HP ada satu baris keterangan di bawah deretan angka.
+2. **Tombol Bulan / Tahun / Filter Tanggal.**
+   - **Bulan:** membuka pilihan tahun dan 12 bulan, masing-masing dengan jumlah akadnya.
+   - **Tahun:** membuka pilihan tahun, mulai dari tahun data pertama tercatat sampai tahun ini. Bila sudah ada jadwal untuk tahun depan, tahun itu ikut muncul.
+   - Periode terpilih tampil di tombolnya, misalnya "Bulan Mar 2026".
+   - Kartu **Bulan Ini / Tahun Ini** di atas selalu menghitung periode berjalan, lepas dari pilihan di bawah. Bila yang dipilih sama dengan bulan atau tahun berjalan, angka atas dan bawah sama.
+   - Kartu penghulu mengikuti periode yang dipilih.
+   - Mengetuk kartu Bulan Ini / Tahun Ini mengembalikan daftar ke periode berjalan.
+3. **Tombol melayang "Hari Ini".** Letaknya di kiri bawah di HP, dan di kanan bawah di laptop.
+   - Langsung menggulir ke akad hari ini.
+   - Bila hari ini kosong, menggulir ke akad mendatang terdekat dengan pesan "Hari ini tidak ada akad. Akad terdekat: …".
+   - Tanggal tujuan disorot sebentar.
+   - Filter penghulu atau pencarian yang aktif tetap dihormati. Bila periode yang tampil tidak memuat tanggal itu, tab otomatis pindah ke bulan tersebut.
