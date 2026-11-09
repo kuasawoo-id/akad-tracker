@@ -235,6 +235,7 @@ function navigateTo(view) {
   document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === 'view-' + view));
   document.querySelectorAll('[data-nav]').forEach((b) => b.classList.toggle('active', b.dataset.nav === view));
   $('fab').hidden = view !== 'jadwal';
+  $('todayBtn').hidden = view !== 'jadwal';   // v2.4
   if (view !== 'jadwal') closeDetail();
   if (view === 'bimwin') renderBimwin();
   if (view === 'rekap') renderRekap();
@@ -307,11 +308,36 @@ function badgesHtml(j, max) {
 const ACTION_KEYS = ['dup', 'bentrok', 'nopeng', 'ulang', 'batal_cek'];
 const needsAction = (j) => flagsOf(j).some((k) => ACTION_KEYS.indexOf(k) >= 0);
 
+/**
+ * v2.4: tab Bulan / Tahun memakai periode PILIHAN (S.selM = 'yyyy-MM', S.selY = 'yyyy').
+ * Kosong = bulan / tahun berjalan. Kartu "Bulan Ini" / "Tahun Ini" di atas selalu periode berjalan.
+ */
+const curMonth = () => String(S.today || ds(new Date())).slice(0, 7);
+const curYear = () => String(S.today || ds(new Date())).slice(0, 4);
+const selMonth = () => S.selM || curMonth();
+const selYear = () => S.selY || curYear();
+const monthName = (ym, short) => { const p = String(ym).split('-'); return (short ? BLN3 : BULAN)[+p[1] - 1] + ' ' + p[0]; };
+/** Label periode tab aktif: "November 2026" / "2026" (short → "Nov 2026"). */
+function periodText(tab, short) {
+  const t = tab || S.tab;
+  if (t === 'bulan') return monthName(selMonth(), short);
+  if (t === 'tahun') return selYear();
+  return 'Filter';
+}
+/** Tahun yang bisa dipilih: tahun data tercatat paling awal s.d. tahun berjalan (atau tahun jadwal terjauh). */
+function yearOptions() {
+  let min = +curYear(), max = min;
+  S.jadwal.forEach((j) => { if (j.arsip) return; const y = +String(j.tanggal).slice(0, 4); if (y) { min = Math.min(min, y); max = Math.max(max, y); } });
+  const out = [];
+  for (let y = max; y >= min; y--) out.push(String(y));
+  return out;
+}
+
 function tabRange(tab) {
   if (tab === 'hari') return [S.today, S.today];
   if (tab === 'minggu') return weekRange(S.today);
-  if (tab === 'bulan') return monthRange(S.today);
-  if (tab === 'tahun') return yearRange(S.today);
+  if (tab === 'bulan') return monthRange(selMonth() + '-01');
+  if (tab === 'tahun') return yearRange(selYear());
   if (tab === 'filter') return [S.f.from || '', S.f.to || ''];
   return [S.range.from || '', S.range.to || ''];
 }
@@ -410,25 +436,32 @@ function renderSummary() {
   const mList = inR(monthRange(S.today));
   const yList = inR(yearRange(S.today));
   const pList = inR(tabRange(S.tab));
-  const perLbl = { bulan: 'Bulan ini', tahun: 'Tahun ini', filter: 'Filter' }[S.tab] || '';
+  // v2.4: label periode kartu penghulu mengikuti pilihan tab (Bulan ini / Nov 2026 / 2025 / Filter)
+  const perLbl = S.tab === 'bulan' ? (selMonth() === curMonth() ? 'Bulan ini' : periodText('bulan', true))
+    : S.tab === 'tahun' ? (selYear() === curYear() ? 'Tahun ini' : selYear()) : S.tab === 'filter' ? 'Filter' : '';
   const d0 = pd(S.today || ds(new Date()));
+  // v2.4: setiap angka dipisah Luar Kantor + Kantor (contoh 25 + 5)
+  const split = (list) => ({ num: list.length, luar: list.filter((j) => j.tempat !== 'KANTOR').length, kantor: list.filter((j) => j.tempat === 'KANTOR').length });
   const items = [
-    { k: 'bulan', ic: 'calendar', lbl: 'Total Akad Bulan Ini', num: mList.length, note: BULAN[d0.getMonth()], active: S.tab === 'bulan' },
-    { k: 'tahun', ic: 'calendar-check', lbl: 'Total Akad Tahun Ini', num: yList.length, note: String(d0.getFullYear()), active: S.tab === 'tahun' }
+    Object.assign({ k: 'bulan', ic: 'calendar', lbl: 'Total Akad Bulan Ini', note: BULAN[d0.getMonth()], active: S.tab === 'bulan' && selMonth() === curMonth() }, split(mList)),
+    Object.assign({ k: 'tahun', ic: 'calendar-check', lbl: 'Total Akad Tahun Ini', note: String(d0.getFullYear()), active: S.tab === 'tahun' && selYear() === curYear() }, split(yList))
   ];
-  penghuluList().forEach((p) => items.push({ k: 'p:' + p.nama, color: p.warna_hex, lbl: p.nama, num: pList.filter((j) => j.penghulu === p.nama).length, note: perLbl, active: S.f.penghulu === p.nama }));
-  const kosong = pList.filter((j) => !j.penghulu && j.tanggal >= S.today).length;
-  if (kosong) items.push({ k: 'p:__none', ic: 'user-plus', lbl: 'Belum Ada Penghulu', num: kosong, note: perLbl, warn: true, active: S.f.penghulu === '__none' });
+  penghuluList().forEach((p) => items.push(Object.assign({ k: 'p:' + p.nama, color: p.warna_hex, lbl: p.nama, note: perLbl, active: S.f.penghulu === p.nama }, split(pList.filter((j) => j.penghulu === p.nama)))));
+  const kosongList = pList.filter((j) => !j.penghulu && j.tanggal >= S.today);
+  if (kosongList.length) items.push(Object.assign({ k: 'p:__none', ic: 'user-plus', lbl: 'Belum Ada Penghulu', note: perLbl, warn: true, active: S.f.penghulu === '__none' }, split(kosongList)));
   const lead = (it) => it.color ? `<span class="dot" style="background:${esc(it.color)};width:10px;height:10px"></span>` : icon(it.ic);
+  const sumTitle = (it) => `${it.luar} luar kantor + ${it.kantor} kantor = ${it.num} akad`;
   if (DESK.matches) {
     $('summary').innerHTML = `<div class="kpi-grid">${items.map((it) => `
-      <button class="kpi-card ${it.warn ? 'warn' : ''} ${it.active ? 'active' : ''}" data-act="kpi" data-k="${esc(it.k)}" ${it.color ? `style="--accent:${esc(it.color)}"` : ''} title="Tampilkan di daftar">
+      <button class="kpi-card ${it.warn ? 'warn' : ''} ${it.active ? 'active' : ''}" data-act="kpi" data-k="${esc(it.k)}" ${it.color ? `style="--accent:${esc(it.color)}"` : ''} title="${esc(sumTitle(it))} · tampilkan di daftar" aria-label="${esc(it.lbl + ': ' + sumTitle(it))}">
         <div class="kc-top"><span>${esc(it.lbl)}</span>${lead(it)}</div>
-        <div class="kc-val"><span class="kc-num tnum">${it.num}</span><span class="kc-unit">Akad</span><span class="kc-note">${esc(it.note)}</span></div>
+        <div class="kc-val"><span class="kc-num tnum"><span class="kc-luar">${it.luar}</span><span class="kc-op">+</span><span class="kc-kantor">${it.kantor}</span></span><span class="kc-unit">Akad</span><span class="kc-note">${esc(it.note)}</span></div>
+        <div class="kc-split"><span>Luar Kantor + Kantor</span><span class="kc-total tnum">= ${it.num}</span></div>
       </button>`).join('')}</div>`;
   } else {
-    $('summary').innerHTML = `<div class="kpis">${items.map((it) => `<button class="kpi ${it.warn ? 'kpi-warn' : ''} ${it.active ? 'kpi-active' : ''}" data-act="kpi" data-k="${esc(it.k)}">
-        ${it.color ? lead(it) : ''}<span class="kpi-num tnum">${it.num}</span><span class="kpi-lbl">${esc(it.color || it.warn ? it.lbl : it.lbl.replace('Total Akad ', ''))}</span></button>`).join('')}</div>`;
+    $('summary').innerHTML = `<div class="kpis">${items.map((it) => `<button class="kpi ${it.warn ? 'kpi-warn' : ''} ${it.active ? 'kpi-active' : ''}" data-act="kpi" data-k="${esc(it.k)}" aria-label="${esc(it.lbl + ': ' + sumTitle(it))}">
+        ${it.color ? lead(it) : ''}<span class="kpi-num tnum"><span class="kc-luar">${it.luar}</span><span class="kpi-op">+</span><span class="kc-kantor">${it.kantor}</span></span><span class="kpi-lbl">${esc(it.color || it.warn ? it.lbl : it.lbl.replace('Total Akad ', ''))}</span></button>`).join('')}</div>
+      <div class="kpi-legend">Angka = <b>Luar Kantor</b> + <b>Kantor</b></div>`;
   }
 }
 
@@ -443,8 +476,9 @@ function renderToolbar() {
 
 function renderToolbarInner() {
   // Tab ke-3 "Filter Tanggal" membuka jendela filter (status, nikah di, wali, penghulu, rentang tanggal)
-  const tabs = `<div class="tabs" role="tablist">${[['bulan', 'Bulanan'], ['tahun', 'Tahunan'], ['filter', 'Filter Tanggal']].map(([k, l]) =>
-    `<button role="tab" aria-selected="${S.tab === k}" class="${S.tab === k ? 'active' : ''}" data-act="tab" data-v="${k}">${l}</button>`).join('')}</div>`;
+  // v2.4: Bulan / Tahun membuka pilihan bulan / tahun (bukan langsung bulan / tahun berjalan)
+  const tabs = `<div class="tabs" role="tablist">${[['bulan', 'Bulan'], ['tahun', 'Tahun'], ['filter', 'Filter Tanggal']].map(([k, l]) =>
+    `<button role="tab" aria-selected="${S.tab === k}" aria-haspopup="dialog" class="${S.tab === k ? 'active' : ''}" data-act="tab" data-v="${k}">${l}${S.tab === k && k !== 'filter' ? ` <span class="tab-sel">${esc(periodText(k, true))}</span>` : ''}</button>`).join('')}</div>`;
   const search = `<div class="search-wrap">${icon('search')}<input class="input" id="q" type="search" placeholder="Cari nama catin atau desa…" value="${esc(S.f.q)}" aria-label="Cari">
     ${S.f.q ? `<button class="btn btn-ghost btn-icon search-clear" data-act="q-clear" aria-label="Hapus pencarian">${icon('x')}</button>` : ''}</div>`;
   const pChips = penghuluList().map((p) => `<button class="chip" data-act="f-peng" data-v="${esc(p.nama)}" aria-pressed="${S.f.penghulu === p.nama}">
@@ -497,7 +531,7 @@ function renderList() {
   const el = $('list');
   if (!list.length) {
     const anyFilter = S.f.penghulu || S.f.tindakan || S.f.status || S.f.tempat || S.f.wali || S.f.q || S.f.bulan || (S.tab === 'filter' && (S.f.from || S.f.to));
-    el.innerHTML = emptyHtml(anyFilter ? 'Tidak ada jadwal yang cocok' : ({ bulan: 'Belum ada akad bulan ini', tahun: 'Belum ada akad tahun ini' }[S.tab] || 'Belum ada jadwal'),
+    el.innerHTML = emptyHtml(anyFilter ? 'Tidak ada jadwal yang cocok' : ({ bulan: 'Belum ada akad pada ' + periodText('bulan'), tahun: 'Belum ada akad pada tahun ' + selYear() }[S.tab] || 'Belum ada jadwal'),
       anyFilter ? 'Coba hapus sebagian filter.' : 'Tambahkan jadwal dengan tombol + Jadwal.');
     return;
   }
@@ -1252,7 +1286,7 @@ function submitJadwal(d, j, force) {
     delete riwayatCache[res.jadwal.id];
     toast(res.unchanged ? 'Tidak ada perubahan.' : (j ? 'Perubahan disimpan.' : 'Jadwal ditambahkan.'), 'ok');
     if (res.bentrok && res.bentrok.length) toast(`Peringatan bentrok: ${res.jadwal.penghulu} dengan ${res.bentrok.map((b) => jamDot(b.jam) + ' ' + b.catin_pria).join(', ')}.`, 'warn');
-    if (!j) { const [a, b] = tabRange(S.tab); if ((a && res.jadwal.tanggal < a) || (b && res.jadwal.tanggal > b)) { if (res.jadwal.tanggal.slice(0, 4) === S.today.slice(0, 4)) S.tab = 'tahun'; else { S.tab = 'filter'; S.f.from = ''; S.f.to = ''; } } }
+    if (!j) { const [a, b] = tabRange(S.tab); if ((a && res.jadwal.tanggal < a) || (b && res.jadwal.tanggal > b)) { if (res.jadwal.tanggal.slice(0, 4) === S.today.slice(0, 4)) { S.tab = 'tahun'; S.selY = ''; } else { S.tab = 'filter'; S.f.from = ''; S.f.to = ''; } } }
     renderAll();
     if (S.view === 'jadwal' && !DESK.matches) openDetail(res.jadwal.id);
   }).catch((e) => {
@@ -2185,6 +2219,86 @@ function actUnarchive(id, btn) {
 // ============================================================
 const emptyFilter = () => ({ penghulu: '', tindakan: '', status: '', tempat: '', wali: '', from: '', to: '', bulan: false, q: '' });
 
+/**
+ * v2.4: pemilih periode tab Bulan (12 bulan + pilihan tahun) / Tahun (tahun tercatat).
+ * Lepas dari kartu "Bulan Ini" / "Tahun Ini"; bila yang dipilih = periode berjalan, angka atas & bawah sama.
+ * Jumlah per bulan / tahun dihitung lokal (0 ms).
+ */
+function periodModal(kind) {
+  const years = yearOptions();
+  const live = S.jadwal.filter((j) => !j.arsip && j.status !== 'BATAL');
+  const cnt = (prefix) => live.filter((j) => String(j.tanggal).indexOf(prefix) === 0).length;
+  const apply = (fn) => {
+    closeModal(true);
+    fn();
+    S.tab = kind; S.f.bulan = false;
+    S.scrollToday = kind === 'tahun' && selYear() === curYear();
+    renderSummary(); renderAfterFilter();
+  };
+  if (kind === 'tahun') {
+    openModal({
+      title: 'Pilih Tahun', sub: 'Mulai dari tahun data tercatat.',
+      body: `<div class="period-grid period-years">${years.map((y) => `<button type="button" class="period-btn" data-y="${y}" aria-pressed="${S.tab === 'tahun' && selYear() === y}">
+        <b>${y}</b><span>${cnt(y + '-')} akad${y === curYear() ? ' · tahun ini' : ''}</span></button>`).join('')}</div>`,
+      onMount: (m) => m.querySelectorAll('[data-y]').forEach((b) => { b.onclick = () => apply(() => { S.selY = b.dataset.y === curYear() ? '' : b.dataset.y; }); })
+    });
+    return;
+  }
+  let y = (S.tab === 'bulan' ? selMonth() : curMonth()).slice(0, 4);
+  if (years.indexOf(y) < 0) y = curYear();
+  const draw = (m) => {
+    m.querySelector('#pmYears').innerHTML = years.map((x) => `<button type="button" class="chip" data-py="${x}" aria-pressed="${x === y}">${x}</button>`).join('');
+    m.querySelector('#pmMonths').innerHTML = BULAN.map((nm, i) => {
+      const ym = y + '-' + pad(i + 1);
+      const n = cnt(ym + '-');
+      return `<button type="button" class="period-btn ${n ? '' : 'is-zero'}" data-ym="${ym}" aria-pressed="${S.tab === 'bulan' && selMonth() === ym}">
+        <b>${nm}</b><span>${n} akad${ym === curMonth() ? ' · bulan ini' : ''}</span></button>`;
+    }).join('');
+    m.querySelectorAll('[data-py]').forEach((b) => { b.onclick = () => { y = b.dataset.py; draw(m); }; });
+    m.querySelectorAll('[data-ym]').forEach((b) => { b.onclick = () => apply(() => { S.selM = b.dataset.ym === curMonth() ? '' : b.dataset.ym; }); });
+  };
+  openModal({
+    title: 'Pilih Bulan', sub: 'Pilih tahun, lalu bulannya.',
+    body: `<div class="flex wrap mb12" id="pmYears" role="group" aria-label="Tahun"></div><div class="period-grid" id="pmMonths"></div>`,
+    onMount: draw
+  });
+}
+
+/**
+ * v2.4: tombol melayang "Hari Ini" → gulir ke akad hari ini; bila hari ini kosong → akad mendatang terdekat.
+ * Periode tab disesuaikan bila tanggal tujuan di luar periode yang tampil. Lokal, tanpa panggilan server.
+ */
+function goToToday() {
+  if (!S.boot) return;
+  if (S.selectedId && S.detailMode === 'sheet') closeDetail();
+  const firstFrom = (list) => list.filter((j) => j.status !== 'BATAL' && j.tanggal >= S.today)
+    .reduce((m, j) => (!m || j.tanggal < m ? j.tanggal : m), '');
+  let target = firstFrom(filtered({ tab: 'semua' }));   // hormati filter aktif (penghulu, cari, dll.), abaikan periode
+  if (!target) {
+    target = firstFrom(S.jadwal.filter((j) => !j.arsip));
+    if (target) S.f = emptyFilter();   // tidak terlihat dengan filter aktif → filter dilepas
+  }
+  if (!target) { toast('Belum ada akad hari ini maupun yang akan datang.', 'warn'); return; }
+  const [a, b] = tabRange(S.tab);
+  if (S.f.bulan || (a && target < a) || (b && target > b)) {
+    S.tab = 'bulan'; S.f.bulan = false;
+    S.selM = target.slice(0, 7) === curMonth() ? '' : target.slice(0, 7);
+  }
+  S.scrollToday = false;
+  renderSummary(); renderAfterFilter();
+  const node = $('list').querySelector(`[data-date="${target}"]`);
+  if (node) {
+    const host = node.closest('.day') || node;
+    // HP: sisakan ruang untuk toast di atas agar judul tanggal tujuan tidak tertutup
+    const y = host.getBoundingClientRect().top + window.scrollY - (DESK.matches ? 90 : 140);
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    host.classList.remove('is-flash'); void host.offsetWidth; host.classList.add('is-flash');
+    setTimeout(() => host.classList.remove('is-flash'), 1800);
+  }
+  if (target === S.today) toast(`Hari ini: ${S.jadwal.filter((j) => !j.arsip && j.status !== 'BATAL' && j.tanggal === S.today).length} akad.`, 'ok');
+  else toast(`Hari ini tidak ada akad. Akad terdekat: ${fmtLong(target)}.`, 'ok');
+}
+
 /** Tab "Filter Tanggal": status, nikah di, wali, penghulu, lalu rentang tanggal akad. Disaring lokal (0 ms). */
 function filterTanggalModal() {
   const f = S.f;
@@ -2482,7 +2596,7 @@ document.addEventListener('click', (e) => {
     }
     case 'tab':
       if (el.dataset.v === 'filter') { filterTanggalModal(); break; }
-      S.tab = el.dataset.v; S.f.bulan = false; S.scrollToday = S.tab !== 'bulan'; renderSummary(); renderAfterFilter(); break;
+      periodModal(el.dataset.v); break;
     case 'kpi': applyKpi(el.dataset.k); break;
     case 'f-peng': S.f.penghulu = S.f.penghulu === el.dataset.v ? '' : el.dataset.v; renderAfterFilter(); break;
     case 'f-tindakan': S.f.tindakan = S.f.tindakan ? '' : 'any'; renderAfterFilter(); break;
@@ -2575,12 +2689,13 @@ window.addEventListener('scroll', closeRowMenu, true);
 window.addEventListener('resize', closeRowMenu);
 $('sheetBackdrop').addEventListener('click', closeDetail);
 $('fab').addEventListener('click', () => jadwalForm(null));
+$('todayBtn').addEventListener('click', goToToday);   // v2.4
 $('idBtn').addEventListener('click', () => whoModal(false));
 $('refreshBtn').addEventListener('click', () => reloadAll(true));
 
 function applyKpi(k) {
   // Kartu Bulan/Tahun → ganti tab; kartu penghulu → saring daftar per penghulu (klik lagi untuk lepas)
-  if (k === 'bulan' || k === 'tahun') { S.tab = k; S.f.penghulu = ''; }
+  if (k === 'bulan' || k === 'tahun') { S.tab = k; S.f.penghulu = ''; if (k === 'bulan') S.selM = ''; else S.selY = ''; }   // v2.4: kartu atas = periode berjalan
   else if (k.indexOf('p:') === 0) { const p = k.slice(2); S.f.penghulu = S.f.penghulu === p ? '' : p; }
   S.scrollToday = false;
   renderSummary();
