@@ -1321,8 +1321,9 @@ function bwLabel(j) {
   return 'Belum Bimwin';
 }
 /** v2.3: asal data jadwal — Form Publik (modin), KUA-Link (desa), atau Dashboard. */
-function sumberLbl(j) { return j.sumber === 'FORM' ? 'Form Publik' : j.sumber === 'KUA-LINK' ? 'KUA-Link (desa)' : 'Dashboard'; }
-function klBadge(j) { return j.sumber === 'KUA-LINK' ? '<span class="badge b-info" title="Didaftarkan desa lewat KUA-Link">KUA-Link</span>' : ''; }
+function sumberLbl(j) { return j.sumber === 'FORM' ? 'Form Publik' : j.sumber === 'KUA-LINK' ? 'KUA-Link (desa)' : j.sumber === 'LABUKU-DESK' ? 'LABUKU Desk (pendaftaran di KUA)' : 'Dashboard'; }
+/* v2.5: kiriman LABUKU Desk setelah berkas diverifikasi (asal KUA-Link tetap berlabel KUA-Link) */
+function klBadge(j) { return j.sumber === 'KUA-LINK' ? '<span class="badge b-info" title="Didaftarkan desa lewat KUA-Link">KUA-Link</span>' : j.sumber === 'LABUKU-DESK' ? '<span class="badge b-info" title="Didaftarkan di KUA, berkas diverifikasi di LABUKU Desk">LABUKU Desk</span>' : ''; }
 
 function bwBadge(j) {
   const st = bwSt(j);
