@@ -714,3 +714,43 @@ html.nav-rapat { --safe-b: 0px; }
   color: var(--text); background: var(--surface); resize: none; overflow-y: auto; white-space: pre-wrap; outline: none; }
 .ket-pop-foot { display: flex; align-items: center; gap: 8px; }
 .ket-cnt { font-size: 12px; color: var(--text-muted); }
+
+/* ============================================================
+   v2.4 — ringkasan Luar Kantor | Kantor · pemilih Bulan/Tahun · tombol Hari Ini
+   ============================================================ */
+.kpi .kpi-num { display: inline-flex; align-items: baseline; gap: 3px; }
+.kpi .kpi-op { font-size: 15px; font-weight: 400; color: var(--text-faint); margin: 0 2px; }
+.kpi-legend { margin: -6px 0 12px; font-size: 11.5px; color: var(--text-muted); }
+.kpi-legend b { font-weight: 600; color: var(--text); }
+.kc-num .kc-op { font-size: .8em; font-weight: 400; color: var(--text-faint); margin: 0 6px; position: relative; top: -.06em; }
+.kc-split { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+.kc-split .kc-total { font-weight: 600; color: var(--text); }
+.kpi-card.warn .kc-split, .kpi-card.warn .kc-split .kc-total, .kpi-card.warn .kc-op { color: var(--warn-fg); }
+.tabs button .tab-sel { display: block; font-size: 11px; font-weight: 600; line-height: 1.2; opacity: .85; }
+.tabs button.active:has(.tab-sel) { line-height: 1.15; }
+.period-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.period-years { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.period-btn { display: grid; gap: 2px; padding: 12px 10px; min-height: 64px; text-align: left; border-radius: var(--r-md); border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+.period-btn b { font-size: 14.5px; font-weight: 700; }
+.period-btn span { font-size: 12px; color: var(--text-muted); }
+.period-btn.is-zero b { color: var(--text-muted); font-weight: 600; }
+.period-btn:hover { border-color: var(--primary); }
+.period-btn[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--primary); }
+.period-btn[aria-pressed="true"] b, .period-btn[aria-pressed="true"] span { color: var(--primary); }
+.fab-today {
+  position: fixed; left: 16px; bottom: calc(var(--bottom-h) + var(--safe-b) + 20px); z-index: 35;
+  display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; border-radius: var(--r-full);
+  background: var(--surface); color: var(--primary); border: 1px solid var(--border); font-weight: 700; font-size: 14px; box-shadow: var(--sh-3);
+}
+.fab-today:hover { border-color: var(--primary); }
+.fab-today[hidden] { display: none; }
+@keyframes akd-flash { 0%, 60% { box-shadow: 0 0 0 3px var(--primary); } 100% { box-shadow: 0 0 0 3px transparent; } }
+.day.is-flash, .table-wrap.is-flash { border-radius: var(--r-lg); animation: akd-flash 1.8s var(--ease); }
+@media (min-width: 1024px) {
+  .fab-today { left: auto; right: 24px; bottom: 60px; height: 46px; }
+  .tabs button .tab-sel { display: inline; margin-left: 6px; font-size: 12px; }
+  .kpi-card .kc-split { margin-top: 2px; }
+}
+@media (min-width: 1024px) { body:has(.split.has-detail) .fab-today { right: calc(460px + 40px + 16px); } }
+@media (min-width: 1024px) and (max-width: 1365px) { body:has(.split.has-detail) .fab-today { right: calc(400px + 40px + 16px); } }
+@media (prefers-reduced-motion: reduce) { .day.is-flash, .table-wrap.is-flash { animation: none; box-shadow: 0 0 0 3px var(--primary); } }
