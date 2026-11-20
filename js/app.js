@@ -446,6 +446,10 @@ function renderSummary() {
     Object.assign({ k: 'bulan', ic: 'calendar', lbl: 'Total Akad Bulan Ini', note: BULAN[d0.getMonth()], active: S.tab === 'bulan' && selMonth() === curMonth() }, split(mList)),
     Object.assign({ k: 'tahun', ic: 'calendar-check', lbl: 'Total Akad Tahun Ini', note: String(d0.getFullYear()), active: S.tab === 'tahun' && selYear() === curYear() }, split(yList))
   ];
+  // v2.4.2: kartu tambahan untuk bulan / tahun PILIHAN (hanya bila bukan bulan / tahun berjalan)
+  if ((S.tab === 'bulan' && selMonth() !== curMonth()) || (S.tab === 'tahun' && selYear() !== curYear())) {
+    items.push(Object.assign({ k: 'sel', ic: S.tab === 'bulan' ? 'calendar' : 'calendar-check', lbl: 'Total Akad ' + periodText(S.tab, true), note: 'Pilihan', active: true }, split(pList)));
+  }
   penghuluList().forEach((p) => items.push(Object.assign({ k: 'p:' + p.nama, color: p.warna_hex, lbl: p.nama, note: perLbl, active: S.f.penghulu === p.nama }, split(pList.filter((j) => j.penghulu === p.nama)))));
   const kosongList = pList.filter((j) => !j.penghulu && j.tanggal >= S.today);
   if (kosongList.length) items.push(Object.assign({ k: 'p:__none', ic: 'user-plus', lbl: 'Belum Ada Penghulu', note: perLbl, warn: true, active: S.f.penghulu === '__none' }, split(kosongList)));
@@ -2697,6 +2701,7 @@ $('refreshBtn').addEventListener('click', () => reloadAll(true));
 function applyKpi(k) {
   // Kartu Bulan/Tahun → ganti tab; kartu penghulu → saring daftar per penghulu (klik lagi untuk lepas)
   if (k === 'bulan' || k === 'tahun') { S.tab = k; S.f.penghulu = ''; if (k === 'bulan') S.selM = ''; else S.selY = ''; }   // v2.4: kartu atas = periode berjalan
+  else if (k === 'sel') { S.f.penghulu = ''; }   // v2.4.2: kartu periode pilihan → tampilkan semua penghulu di periode itu
   else if (k.indexOf('p:') === 0) { const p = k.slice(2); S.f.penghulu = S.f.penghulu === p ? '' : p; }
   S.scrollToday = false;
   renderSummary();
